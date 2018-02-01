@@ -1,5 +1,5 @@
 # vim: sw=2 ai expandtab
-#    __init__.py is part of the pipcache repository and oc_template module.
+#    __init__.py is part of the pipcache repository and template module.
 #    It's purpose is define the OcTemplate class that will build OpenShift
 #    templates from a jinja template file.
 #
@@ -24,10 +24,6 @@ import os, logging
 SCRIPT_DIR=os.path.dirname(os.path.realpath(__file__))
 TEMPLATE=SCRIPT_DIR + '/pipcache-template.yaml.j2'
 MD_TEMPLATE=SCRIPT_DIR + "/Parameters.md.j2"
-OC_TEMPLATES = [
-    '/'.join([os.getcwd(), 'pipcache-template-ephemeral.yaml']),
-    '/'.join([os.getcwd(), 'pipcache-template-persistent.yaml'])
-    ]
 
 VERBOSE_TO_LOGLEVEL={
     0: logging.ERROR,
@@ -81,28 +77,28 @@ class BaseTemplate(object):
       w.write(raw)
     self.logger.info("Wrote out [{}] bytes.".format(len(raw)))
 
-import yaml
-class MdTemplate(object):
-  def __init__(self, input_file=MD_TEMPLATE, directory=None, oc_templates=OC_TEMPLATES):
-    super(OcTemplate, self).__init__(input_file, directory)
+class MdTemplate(BaseTemplate):
+  def __init__(self, input_file=MD_TEMPLATE, directory=None, oc_templates=[]):
+    super(MdTemplate, self).__init__(input_file, directory)
 
     self.oc_templates = oc_templates
     self.logger.debug("Arg oc_templates: %s", oc_templates)
 
-  def read_oc_templates(self):
+  def read_yaml(self):
+    import yaml
     ret = []
     for tf in self.oc_templates:
       self.logger.warn("Reading in parameters from: %s", tf)
       data = ''
       with open(tf, 'r') as stream:
         data = yaml.load(stream)
-      ret.array_push(data)
+      ret.append(data)
 
     self.logger.debug("Returning: %s", ret)
     return ret
 
   def get_template_environment(self):
-    return dict(templateType = self.templateType)
+    return dict(templates = self.read_yaml())
 
 class OcTemplate(BaseTemplate):
   def __init__(self, input_file=TEMPLATE, directory=None, templateType='persistent'):

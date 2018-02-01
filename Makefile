@@ -18,7 +18,7 @@
 .PHONY: all start-build persistent ephemeral clean
 
 NAME?=pipcache
-TEMPLATE:=./oc_template/pipcache-template.yaml.j2
+TEMPLATE:=./templates/pipcache-template.yaml.j2
 
 PERSISTENT_YAML:=pipcache-template-persistent.yaml
 EPHEMERAL_YAML:=pipcache-template-ephemeral.yaml
@@ -45,7 +45,7 @@ $(EPHEMERAL_YAML): $(TEMPLATE)
 $(EPHEMERAL_YAML): TYPE=ephemeral
 
 $(YAML_FILES):
-	@python -moc_template.cmd -vv $(TYPE)
+	@python -mtemplates.openshift -vv $(TYPE)
 
 start-build:
 	oc start-build $(NAME) --from-dir=src

@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 # vim: sw=2 ai expandtab
-#    cmd.py is part of the pipcache repository and oc_template module. It's
+#    parameters.py is part of the pipcache repository and template module. It's
 #    purpose is to execute the module as a command.
 #
 #    Copyright (C) 2018  Billy Holmes
@@ -18,17 +18,21 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from oc_template import TEMPLATE, VERBOSE_TO_LOGLEVEL, OcTemplate
+from templates import MD_TEMPLATE, VERBOSE_TO_LOGLEVEL, MdTemplate
 
 if __name__ == '__main__':
   import argparse, os, logging
   cwd=os.getcwd()
-  parser = argparse.ArgumentParser(description='Write out OpenShift template from jinja2 template.')
+  parser = argparse.ArgumentParser(description='Write out Parameter.md from jinja2 template.')
   parser.add_argument('-v', '--verbose', help='increase verbosity', action='count')
-  parser.add_argument('-t', '--template', help='the template file (default: {})'.format(TEMPLATE), default=TEMPLATE)
+  parser.add_argument('-t', '--template', help='the template file (default: {})'.format(MD_TEMPLATE), default=MD_TEMPLATE)
   parser.add_argument('-d', '--directory', '--dir', help='the output directory (default: cwd({}))'.format(cwd), default=cwd)
-  parser.add_argument('templateType', nargs=1, help='the template type', choices=['persistent', 'ephemeral'])
+  parser.add_argument('ocp_templates', nargs=2, help='the template files to extract parameters')
   args = parser.parse_args()
-  args.verbose = args.verbose if args.verbose > len(VERBOSE_TO_LOGLEVEL.keys()) else len(VERBOSE_TO_LOGLEVEL.keys())-1
+  if args.verbose is None:
+    args.verbose = 0
+  if args.verbose > len(VERBOSE_TO_LOGLEVEL.keys()):
+    args.verbose = len(VERBOSE_TO_LOGLEVEL.keys())
+  print "Verbose: {}".format(args.verbose)
   logging.basicConfig(level=VERBOSE_TO_LOGLEVEL[args.verbose], format='%(levelname)s %(name)s %(funcName)s - %(message)s')
-  OcTemplate(args.template, args.directory, args.templateType[0]).process()
+  MdTemplate(args.template, args.directory, args.ocp_templates).process()
