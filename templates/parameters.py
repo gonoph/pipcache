@@ -33,6 +33,5 @@ if __name__ == '__main__':
     args.verbose = 0
   if args.verbose > len(VERBOSE_TO_LOGLEVEL.keys()):
     args.verbose = len(VERBOSE_TO_LOGLEVEL.keys())
-  print "Verbose: {}".format(args.verbose)
   logging.basicConfig(level=VERBOSE_TO_LOGLEVEL[args.verbose], format='%(levelname)s %(name)s %(funcName)s - %(message)s')
   MdTemplate(args.template, args.directory, args.ocp_templates).process()
