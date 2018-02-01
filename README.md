@@ -59,6 +59,10 @@ To use it set this environment variable for your s2i builds as [described in the
 
 [1]: https://github.com/sclorg/s2i-python-container/tree/master/2.7
 
+# Parameters
+
+[Checkout the Parameters Page](Parameters.md)
+
 # Finding the right URL
 
 There's two ways to access the devpi-server url:
