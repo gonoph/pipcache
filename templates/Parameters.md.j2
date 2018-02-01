@@ -9,7 +9,7 @@ These are the parameters for each of the templates: `{{ templates | sort | join(
 | Name | required | default | description |
 | ---- | -------- | ------- | ----------- |
 {% for parm in template.parameters -%}
-| `{{ parm.name }}` | {{ parm.required }} | {{ parm.value | default(' ') }} | {{ parm.description }} |
+| `{{ parm.name }}` | {{ parm.required | default(False) | ternary('Y', 'N') }} | {{ parm.value | default(' ') }} | {{ parm.description }} |
 {% endfor %}
 
 {% endfor %}

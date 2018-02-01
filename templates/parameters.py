@@ -25,7 +25,6 @@ if __name__ == '__main__':
   cwd=os.getcwd()
   parser = argparse.ArgumentParser(description='Write out Parameter.md from jinja2 template.')
   parser.add_argument('-v', '--verbose', help='increase verbosity', action='count')
-  parser.add_argument('-t', '--template', help='the template file (default: {})'.format(MD_TEMPLATE), default=MD_TEMPLATE)
   parser.add_argument('-d', '--directory', '--dir', help='the output directory (default: cwd({}))'.format(cwd), default=cwd)
   parser.add_argument('ocp_templates', nargs=2, help='the template files to extract parameters')
   args = parser.parse_args()
@@ -34,4 +33,4 @@ if __name__ == '__main__':
   if args.verbose > len(VERBOSE_TO_LOGLEVEL.keys()):
     args.verbose = len(VERBOSE_TO_LOGLEVEL.keys())
   logging.basicConfig(level=VERBOSE_TO_LOGLEVEL[args.verbose], format='%(levelname)s %(name)s %(funcName)s - %(message)s')
-  MdTemplate(args.template, args.directory, args.ocp_templates).process()
+  MdTemplate(args.directory, args.ocp_templates).process()

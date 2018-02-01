@@ -18,7 +18,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from jinja2 import Template
+import jinja2
 import os, logging
 
 SCRIPT_DIR=os.path.dirname(os.path.realpath(__file__))
@@ -32,45 +32,52 @@ VERBOSE_TO_LOGLEVEL={
     3: logging.DEBUG
     }
 
+def ternary(value, true_value, false_value):
+  return value if true_value else false_value
+
 class BaseTemplate(object):
-  def __init__(self, input_file, directory=None):
+  def __init__(self, template_file, directory=None):
     self.logger = logging.getLogger(self.__class__.__name__)
     if directory is None:
       directory = os.getcwd()
 
-    self.input_file = input_file
+    self.template_file = template_file
     self.directory = directory
 
-    self.logger.debug("Arg input_file: {}".format(input_file))
+    self.logger.debug("Arg template_file: {}".format(template_file))
     self.logger.debug("Arg directory: {}".format(directory))
 
-  def output_template_args(self):
-    ret = [ self.directory, '.'.join(os.path.basename(self.input_file).split('.')[:-1]) ]
+  def get_output_file(self):
+    # get rid of the .j2 extension
+    filename = '.'.join(os.path.basename(self.template_file).split('.')[:-1])
+    # add directory to path
+    ret = '/'.join([self.directory, filename])
     self.logger.debug("Return args: {}".format(ret))
     return ret
 
-  def get_template_environment(self):
+  def get_template_variables(self):
     raise Exception('Not Implemented')
 
   def process(self):
-    self.output_file = "{}/{}".format(*self.output_template_args())
+    self.output_file = self.get_output_file()
 
-    self.logger.warn("Reading from: {}".format(self.input_file))
+    self.logger.warn("Reading from: {}".format(self.template_file))
     self.logger.warn("Writing to: {}".format(self.output_file))
 
-    raw = self.read()
-    template = Template(raw)
+    env = jinja2.Environment(
+        loader=jinja2.PackageLoader('templates', '.')
+        )
+    env.filters['ternary'] = ternary
+
+    template = env.get_template(self.template_file)
+
     self.logger.debug("Template read in ok.")
-    environment = self.get_template_environment()
-    raw = template.render(environment)
+
+    variables = self.get_template_variables()
+    raw = template.render(variables)
+
     self.logger.debug("Template rendered [{}] bytes.".format(len(raw)))
     self.write(raw)
-
-  def read(self):
-    with open(self.input_file, 'r') as r:
-      raw = r.read()
-      self.logger.info("Reading in [{}] bytes.".format(len(raw)))
-      return raw
 
   def write(self, raw):
     with open(self.output_file, 'w') as w:
@@ -78,8 +85,8 @@ class BaseTemplate(object):
     self.logger.info("Wrote out [{}] bytes.".format(len(raw)))
 
 class MdTemplate(BaseTemplate):
-  def __init__(self, input_file=MD_TEMPLATE, directory=None, oc_templates=[]):
-    super(MdTemplate, self).__init__(input_file, directory)
+  def __init__(self, directory=None, oc_templates=[]):
+    super(MdTemplate, self).__init__(MD_TEMPLATE, directory)
 
     self.oc_templates = oc_templates
     self.logger.debug("Arg oc_templates: %s", oc_templates)
@@ -98,21 +105,32 @@ class MdTemplate(BaseTemplate):
     self.logger.debug("Returning: %s", ret)
     return ret
 
-  def get_template_environment(self):
+  def get_template_variables(self):
     return dict(templates = self.read_yaml())
 
 class OcTemplate(BaseTemplate):
-  def __init__(self, input_file=TEMPLATE, directory=None, templateType='persistent'):
-    super(OcTemplate, self).__init__(input_file, directory)
+  def __init__(self, template_file=TEMPLATE, directory=None, templateType='persistent'):
+    super(OcTemplate, self).__init__(template_file, directory)
 
     self.templateType = templateType
     self.logger.debug("Arg templateType: {}".format(templateType))
 
-  def output_template_args(self):
+  def get_output_file(self):
     bn = os.path.basename(self.input_file).split('.')
-    ret = [ self.directory, '.'.join(["{}-{}".format(bn[0], self.templateType)] + bn[1:-1]) ]
+    # add template type
+    filename = "{}-{}".format(bn[0], self.templateType)
+    # add the real ext back in
+    filename = '.'.join([filename, bn[1:-1] ])
+    # add directory to path
+    ret = '/'.join([ self.directory, filename ])
+    self.logger.debug("Return args: {}".format(ret))
+    return ret
+
+  def output_template_args(self):
+    bn = os.path.basename(self.template_file).split('.')
+    ret = '.'.join(["{}-{}".format(bn[0], self.templateType)] + bn[1:-1])
     self.logger.debug("Will Return: {}".format(ret))
     return ret
 
-  def get_template_environment(self):
+  def get_template_variables(self):
     return dict(templateType = self.templateType)
