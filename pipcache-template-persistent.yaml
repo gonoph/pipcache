@@ -8,7 +8,7 @@ labels:
 message: |-
   The following service(s) have been created in your project: ${NAME}
 
-  For more information about using this template, see https://github.com/gonoph/pipcache/README.md
+  For more information about using this template, see https://github.com/gonoph/pipcache
 metadata:
   annotations:
     description: devpi configured as an OpenShift application to provide pip caching.
