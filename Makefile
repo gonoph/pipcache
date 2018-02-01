@@ -18,8 +18,8 @@
 .PHONY: all start-build persistent ephemeral parameters clean 
 
 NAME        ?= pipcache
-TEMPLATE    := ./templates/pipcache-template.yaml.j2
-MD_TEMPLATE := ./templates/Parameters.md.j2
+TEMPLATE    := ./generator/templates/pipcache-template.yaml.j2
+MD_TEMPLATE := ./generator/templates/Parameters.md.j2
 
 PERSISTENT_YAML := pipcache-template-persistent.yaml
 EPHEMERAL_YAML  := pipcache-template-ephemeral.yaml
@@ -50,10 +50,10 @@ $(EPHEMERAL_YAML): TYPE=ephemeral
 $(PARAMETER_MD): $(MD_TEMPLATE)
 
 $(YAML_FILES):
-	@python -mtemplates.openshift -vv $(TYPE)
+	@python -mgenerator.openshift -vv $(TYPE)
 
 $(PARAMETER_MD):
-	@python -mtemplates.parameters -vv $(YAML_FILES)
+	@python -mgenerator.parameters -vv $(YAML_FILES)
 
 start-build:
 	oc start-build $(NAME) --from-dir=src

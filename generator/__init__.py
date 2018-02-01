@@ -21,9 +21,8 @@
 import jinja2
 import os, logging
 
-SCRIPT_DIR=os.path.dirname(os.path.realpath(__file__))
-TEMPLATE=SCRIPT_DIR + '/pipcache-template.yaml.j2'
-MD_TEMPLATE=SCRIPT_DIR + "/Parameters.md.j2"
+TEMPLATE='pipcache-template.yaml.j2'
+MD_TEMPLATE="Parameters.md.j2"
 
 VERBOSE_TO_LOGLEVEL={
     0: logging.ERROR,
@@ -33,7 +32,13 @@ VERBOSE_TO_LOGLEVEL={
     }
 
 def ternary(value, true_value, false_value):
-  return value if true_value else false_value
+  true_types = [ 'true', 'True', 'yes', 'Yes', True ]
+  false_types = [ ' false', 'False', 'no', 'No', False ]
+  if value in true_types:
+    return true_value
+  if value in false_types:
+    return false_value
+  raise Exception('Invalid ternary key: {}'.format(value))
 
 class BaseTemplate(object):
   def __init__(self, template_file, directory=None):
@@ -65,7 +70,7 @@ class BaseTemplate(object):
     self.logger.warn("Writing to: {}".format(self.output_file))
 
     env = jinja2.Environment(
-        loader=jinja2.PackageLoader('templates', '.')
+        loader=jinja2.PackageLoader('generator', 'templates')
         )
     env.filters['ternary'] = ternary
 
@@ -116,11 +121,11 @@ class OcTemplate(BaseTemplate):
     self.logger.debug("Arg templateType: {}".format(templateType))
 
   def get_output_file(self):
-    bn = os.path.basename(self.input_file).split('.')
+    bn = os.path.basename(self.template_file).split('.')
     # add template type
     filename = "{}-{}".format(bn[0], self.templateType)
     # add the real ext back in
-    filename = '.'.join([filename, bn[1:-1] ])
+    filename = '.'.join([filename] + bn[1:-1] )
     # add directory to path
     ret = '/'.join([ self.directory, filename ])
     self.logger.debug("Return args: {}".format(ret))

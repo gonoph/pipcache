@@ -18,7 +18,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from templates import MD_TEMPLATE, VERBOSE_TO_LOGLEVEL, MdTemplate
+from generator import MD_TEMPLATE, VERBOSE_TO_LOGLEVEL, MdTemplate
 
 if __name__ == '__main__':
   import argparse, os, logging
@@ -30,7 +30,7 @@ if __name__ == '__main__':
   args = parser.parse_args()
   if args.verbose is None:
     args.verbose = 0
-  if args.verbose > len(VERBOSE_TO_LOGLEVEL.keys()):
-    args.verbose = len(VERBOSE_TO_LOGLEVEL.keys())
+  if args.verbose >= len(VERBOSE_TO_LOGLEVEL.keys()):
+    args.verbose = len(VERBOSE_TO_LOGLEVEL.keys()) - 1
   logging.basicConfig(level=VERBOSE_TO_LOGLEVEL[args.verbose], format='%(levelname)s %(name)s %(funcName)s - %(message)s')
   MdTemplate(args.directory, args.ocp_templates).process()

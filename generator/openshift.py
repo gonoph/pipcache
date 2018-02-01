@@ -18,7 +18,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from templates import TEMPLATE, VERBOSE_TO_LOGLEVEL, OcTemplate
+from generator import TEMPLATE, VERBOSE_TO_LOGLEVEL, OcTemplate
 
 if __name__ == '__main__':
   import argparse, os, logging
