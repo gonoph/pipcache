@@ -1,0 +1,222 @@
+---
+# vim: sw=2 ai expandtab
+apiVersion: v1
+kind: Template
+labels:
+  app: pipcache
+  template: pipcache-{{ templateType }}
+message: |-
+  The following service(s) have been created in your project: ${NAME}
+
+  For more information about using this template, see https://github.com/gonoph/pipcache/README.md
+metadata:
+  annotations:
+    description: devpi configured as an OpenShift application to provide pip caching.
+    iconClass: icon-python
+    openshift.io/display-name: Pipcache ({{ templateType | title }})
+    tags: quickstart,python,pip,cache,devpi
+    template.openshift.io/documentation-url: https://github.com/gonoph/pipcache
+    template.openshift.io/long-description: This template creates an application to host devpi
+      in order to cache pip respository data for other python based builds.
+    template.openshift.io/provider-display-name: Gonoph.Net
+  creationTimestamp: null
+  name: pipcache-{{ templateType }}
+objects:
+{% if templateType == 'persistent' -%}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${NAME}-data
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${VOLUME_CAPACITY}
+{% endif -%}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: Exposes and load balances the application pods
+    name: ${NAME}
+  spec:
+    ports:
+    - name: web
+      port: 80
+      targetPort: 8080
+    selector:
+      app: pipcache
+      name: ${NAME}
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      template.openshift.io/expose-uri: http://{.spec.host}{.spec.path}
+    name: ${NAME}
+  spec:
+    host: ${APPLICATION_DOMAIN}
+    path: /
+    tls:
+      insecureEdgeTerminationPolicy: Allow
+      termination: edge
+    to:
+      kind: Service
+      name: ${NAME}
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
+    name: ${NAME}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      description: Defines how to build the application
+    name: ${NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${NAME}:latest
+    source:
+      contextDir: ${CONTEXT_DIR}
+      git:
+        ref: ${SOURCE_REPOSITORY_REF}
+        uri: ${SOURCE_REPOSITORY_URL}
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: python:latest
+          namespace: ${NAMESPACE}
+      type: Source
+    triggers:
+    - type: ImageChange
+    - type: ConfigChange
+    - github:
+        secret: ${GITHUB_WEBHOOK_SECRET}
+      type: GitHub
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      description: Defines how to deploy the application server
+    name: ${NAME}
+  spec:
+    replicas: 1
+    selector:
+      app: pipcache
+      name: ${NAME}
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: pipcache
+          name: ${NAME}
+        name: ${NAME}
+      spec:
+        containers:
+        - env:
+          - name: DEVPI_DATA_VOLUME
+            value: ${DATA_VOLUME}
+          - name: DEVPI_SERVER_PORT
+            value: "8080"
+          - name: DEVPI_EXTRA_ARGS
+            value: ""
+          image: ' '
+          name: devpi
+          ports:
+          - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            timeoutSeconds: 3
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+              cpu: ${CPU_LIMIT}
+          volumeMounts:
+            - mountPath: ${DATA_VOLUME}
+              name: pipcache-data
+        volumes:
+          - name: pipcache-data
+{%- if templateType == 'persistent' %}
+            persistentVolumeClaim:
+              claimName: pipcache-data
+{%- else %}
+            emptyDir:
+              medium: ""
+{%- endif %}
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - devpi
+        from:
+          kind: ImageStreamTag
+          name: ${NAME}:latest
+      type: ImageChange
+    - type: ConfigChange
+parameters:
+- description: The name assigned to all of the frontend objects defined in this template.
+  displayName: Name
+  name: NAME
+  required: true
+  value: pipcache
+- description: The OpenShift Namespace where the builder ImageStream resides.
+  displayName: Namespace
+  name: NAMESPACE
+  required: true
+  value: openshift
+- description: Maximum amount of memory the container can use.
+  displayName: Memory Limit
+  name: MEMORY_LIMIT
+  required: true
+  value: 128Mi
+- description: Maximum amount of CPU the container can use (in cores).
+  displayName: CPU Limit
+  name: CPU_LIMIT
+  required: true
+  value: "1"
+- description: Data volume path
+  displayName: Data Volume
+  name: DATA_VOLUME
+  required: true
+  value: /opt/app-root/data
+{% if templateType == 'persistent' -%}
+- description: Volume space available for data, e.g. 512Mi, 2Gi
+  displayName: Volume Capacity
+  name: VOLUME_CAPACITY
+  required: true
+  value: 1Gi
+{% endif -%}
+- description: The URL of the repository with your application source code.
+  displayName: Git Repository URL
+  name: SOURCE_REPOSITORY_URL
+  required: true
+  value: http://git.virt.gonoph.net/git/Openshift/pipcache.git
+- description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
+  displayName: Git Reference
+  name: SOURCE_REPOSITORY_REF
+- description: Set this to the relative path to your project if it is not in the root
+    of your repository.
+  displayName: Context Directory
+  name: CONTEXT_DIR
+  value: src
+- description: The exposed hostname that will route to the pipcache service, if left
+    blank a value will be defaulted.
+  displayName: Application Hostname
+  name: APPLICATION_DOMAIN
+- description: Github trigger secret.  A difficult to guess string encoded as part
+    of the webhook URL.  Not encrypted.
+  displayName: GitHub Webhook Secret
+  from: '[a-zA-Z0-9]{40}'
+  generate: expression
+  name: GITHUB_WEBHOOK_SECRET
