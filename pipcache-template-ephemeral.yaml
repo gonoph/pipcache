@@ -176,7 +176,7 @@ parameters:
   displayName: Git Repository URL
   name: SOURCE_REPOSITORY_URL
   required: true
-  value: http://git.virt.gonoph.net/git/Openshift/pipcache.git
+  value: https://github.com/gonoph/pipcache.git
 - description: Set this to a branch name, tag or other ref of your repository if you
     are not using the default branch.
   displayName: Git Reference

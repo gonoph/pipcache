@@ -1,9 +1,10 @@
 # Parameters List
 
-These are the parameters for each of the templates: `{{ templates | map(attribute='metadata.name') | join('`, `')}}`
+These are the parameters for each of the templates: `{{ templates | sort | join('`, `')}}`
 
-{% for template in templates %}
-# Template: `{{ template.metadata.name }}`
+{% for name in templates | sort%}
+{% set template = templates[name] %}
+# Template: `{{ name }}`
 
 | Name | required | default | description |
 | ---- | -------- | ------- | ----------- |

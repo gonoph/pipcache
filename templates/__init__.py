@@ -86,13 +86,14 @@ class MdTemplate(BaseTemplate):
 
   def read_yaml(self):
     import yaml
-    ret = []
+    ret = {}
     for tf in self.oc_templates:
       self.logger.warn("Reading in parameters from: %s", tf)
       data = ''
       with open(tf, 'r') as stream:
         data = yaml.load(stream)
-      ret.append(data)
+
+      ret[data['metadata']['name']] = data
 
     self.logger.debug("Returning: %s", ret)
     return ret

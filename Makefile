@@ -15,15 +15,17 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-.PHONY: all start-build persistent ephemeral clean
+.PHONY: all start-build persistent ephemeral parameters clean 
 
-NAME?=pipcache
-TEMPLATE:=./templates/pipcache-template.yaml.j2
+NAME        ?= pipcache
+TEMPLATE    := ./templates/pipcache-template.yaml.j2
+MD_TEMPLATE := ./templates/Parameters.md.j2
 
-PERSISTENT_YAML:=pipcache-template-persistent.yaml
-EPHEMERAL_YAML:=pipcache-template-ephemeral.yaml
+PERSISTENT_YAML := pipcache-template-persistent.yaml
+EPHEMERAL_YAML  := pipcache-template-ephemeral.yaml
+PARAMETER_MD    := Parameters.md
 
-YAML_FILES:=$(PERSISTENT_YAML) $(EPHEMERAL_YAML)
+YAML_FILES := $(PERSISTENT_YAML) $(EPHEMERAL_YAML)
 
 help:
 	@echo "usage: make (help | all | persistent | ephemeral | start-build)"
@@ -31,24 +33,30 @@ help:
 	@echo "  all         - create both persistent and ephemral templates"
 	@echo "  persistent  - create the persistent template that requests a VolumeClaim"
 	@echo "  ephemeral   - create the ephemeral template that uses an empty dir"
+	@echo "  parameters  - create the Parameter.md based on the yaml templates"
 	@echo "  start-build - manually start a build process using the current source"
 	@echo "  clean       - clean up generated yaml files"
 
-all: persistent ephemeral
+all: persistent ephemeral parameters
 
 persistent: $(PERSISTENT_YAML)
 ephemeral: $(EPHEMERAL_YAML)
+parameters: $(PARAMETER_MD)
 
 $(PERSISTENT_YAML): $(TEMPLATE)
 $(PERSISTENT_YAML): TYPE=persistent
 $(EPHEMERAL_YAML): $(TEMPLATE)
 $(EPHEMERAL_YAML): TYPE=ephemeral
+$(PARAMETER_MD): $(MD_TEMPLATE)
 
 $(YAML_FILES):
 	@python -mtemplates.openshift -vv $(TYPE)
+
+$(PARAMETER_MD):
+	@python -mtemplates.parameters -vv $(YAML_FILES)
 
 start-build:
 	oc start-build $(NAME) --from-dir=src
 
 clean:
-	rm -fv $(YAML_FILES) 
+	rm -fv $(YAML_FILES) $(PARAMETER_MD)
