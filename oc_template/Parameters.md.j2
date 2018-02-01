@@ -1,0 +1,14 @@
+# Parameters List
+
+These are the parameters for each of the templates: `{{ templates | map(attribute=metadata.name) | list | join(',')}}`
+
+{% for template in templates %}
+# Template: `{{ template.metadata.name }}`
+
+| Name | required | default | description |
+| ---- | -------- | ------- | ----------- |
+{% for parm in template.parameters -%}
+| {{ parm.name }} | {{ parm.required }} | {{ parm.value | default(' ') }} | {{ parm.description }} |
+{% endfor %}
+
+{% endfor %}
