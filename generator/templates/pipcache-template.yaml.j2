@@ -131,6 +131,13 @@ objects:
           name: devpi
           ports:
           - containerPort: 8080
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                - /usr/bin/kill
+                - -INT
+                - "1"
           readinessProbe:
             httpGet:
               path: /
