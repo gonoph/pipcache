@@ -51,6 +51,13 @@ oc process pipcache-template-persistent > resources.yaml
 
 # then install it if you did the above command
 oc create -f resources.yaml
+
+# optionally patch the BuildConfig or DeploymentConfig to only run build or deploy on certain nodes:
+oc patch  bc/pipcache -p '{"spec":{"nodeSelector":{"speed":"fast"}}}'
+oc patch  dc/pipcache -p '{"spec":{"template":{"spec":{"nodeSelector":{"speed":"fast"}}}}}'
+
+# or just patch the current project to default to a node selector
+oc patch ns/$(oc project -q) -p '{"metadata":{"annotations":{"openshift.io/node-selector":"speed=fast"}}}'
 ```
 
 To use it set this environment variable for your s2i builds as [described in the upstream][1].
