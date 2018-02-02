@@ -55,8 +55,10 @@ oc create -f resources.yaml
 # optionally patch the BuildConfig or DeploymentConfig to only run build or deploy on certain nodes:
 oc patch  bc/pipcache -p '{"spec":{"nodeSelector":{"speed":"fast"}}}'
 oc patch  dc/pipcache -p '{"spec":{"template":{"spec":{"nodeSelector":{"speed":"fast"}}}}}'
+```
 
-# or just patch the current project to default to a node selector
+Or just patch the current project to default to a node selector using this [hard to find annotation][2].
+```bash
 oc patch ns/$(oc project -q) -p '{"metadata":{"annotations":{"openshift.io/node-selector":"speed=fast"}}}'
 ```
 
@@ -65,6 +67,7 @@ To use it set this environment variable for your s2i builds as [described in the
 * `PIP_INDEX_URL` - Set this variable to use a custom index URL or mirror to download required packages during build proc.
 
 [1]: https://github.com/sclorg/s2i-python-container/tree/master/2.7
+[2]: https://blog.openshift.com/deploying-applications-to-specific-nodes/
 
 # Parameters
 
