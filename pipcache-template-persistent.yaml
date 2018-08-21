@@ -152,7 +152,7 @@ objects:
         volumes:
           - name: pipcache-data
             persistentVolumeClaim:
-              claimName: pipcache-data
+              claimName: ${NAME}-data
     triggers:
     - imageChangeParams:
         automatic: true
