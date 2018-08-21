@@ -155,7 +155,7 @@ objects:
           - name: pipcache-data
 {%- if templateType == 'persistent' %}
             persistentVolumeClaim:
-              claimName: pipcache-data
+              claimName: ${NAME}-data
 {%- else %}
             emptyDir:
               medium: ""
